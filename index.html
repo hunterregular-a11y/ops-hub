@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#0d0f14" />
+<meta name="application-name" content="Ops Hub" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" href="icon-192.png" type="image/png" />
+<title>Ops Hub — Ops Saver + Brainstorm</title>
+<style>
+  :root{
+    --bg:#0d0f14; --panel:#171a22; --panel2:#11141b; --text:#f5f7fb; --muted:#aeb6c6;
+    --line:#2a3040; --accent:#7ea2ff; --good:#62d6a5; --warn:#f2c96d; --bad:#ff8383;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:920px;margin:auto;padding:18px 14px 80px}
+  header{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}
+  h1{font-size:24px;margin:0}
+  .sub{color:var(--muted);font-size:14px;margin-top:4px;line-height:1.35}
+  .pill{padding:7px 10px;border:1px solid var(--line);border-radius:999px;color:var(--good);font-size:12px;white-space:nowrap}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:15px;margin:12px 0}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:700px){.row{grid-template-columns:1fr}}
+  label{display:block;color:#dce2ee;font-size:13px;font-weight:650;margin:9px 0 6px}
+  input,textarea,select{
+    width:100%;border:1px solid var(--line);background:var(--panel2);color:var(--text);
+    border-radius:12px;padding:11px 12px;font:inherit;outline:none
+  }
+  textarea{min-height:86px;resize:vertical}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+  .tiny{font-size:12px;color:var(--muted);line-height:1.35}
+  .buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  button{
+    appearance:none;border:1px solid var(--line);border-radius:12px;background:#202638;color:var(--text);
+    padding:10px 13px;font-weight:700;font-size:14px;cursor:pointer
+  }
+  button.primary{background:var(--accent);color:#081128;border-color:transparent}
+  button.good{background:#183b31;color:#c7ffea;border-color:#2c6a57}
+  button.warn{background:#3a311d;color:#ffe2a1;border-color:#67552a}
+  button.ghost{background:transparent}
+  .checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:700px){.checks{grid-template-columns:1fr}}
+  .check{display:flex;align-items:flex-start;gap:9px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel2)}
+  .check input{width:auto;margin-top:3px}
+  .result{white-space:pre-wrap;background:#0b0d12;border:1px solid var(--line);border-radius:12px;padding:13px;min-height:120px;line-height:1.42}
+  .route{font-weight:800;font-size:18px;margin:2px 0 7px}
+  .route span{color:var(--accent)}
+  .meter{height:10px;background:#0c0f15;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-top:8px}
+  .meter > div{height:100%;width:0;background:var(--good);transition:.2s}
+  .archive{max-height:260px;overflow:auto}
+  .item{border-top:1px solid var(--line);padding:10px 0}
+  .item:first-child{border-top:0}
+  .item-title{font-weight:750}
+  .item-meta{color:var(--muted);font-size:12px;margin-top:2px}
+  details{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--panel2)}
+  summary{cursor:pointer;font-weight:700}
+  .footer-note{color:var(--muted);font-size:12px;text-align:center;margin-top:18px}
+  .status-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:700px){.status-grid{grid-template-columns:1fr}}
+  .badge{font-size:12px;padding:4px 8px;border-radius:999px;background:#262c3d;color:#cbd4e8;display:inline-block;margin-left:6px}
+
+  .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:700px){.hub-grid{grid-template-columns:1fr}}
+  .hub-tile{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--panel2)}
+  .hub-title{font-weight:800;font-size:17px;margin-bottom:5px}
+  .hub-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+  .link-status{margin-top:7px;font-size:12px;color:var(--muted);word-break:break-word}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Ops Saver</h1>
+      <div class="sub">Compact checkpoints, route work to the lightest capable tool, and stop paying the context tax twice.</div>
+    </div>
+    <div class="pill">Local-first • v1.2</div>
+  </header>
+
+  <section class="card" id="hub">
+    <div class="hub-grid">
+      <div class="hub-tile">
+        <div class="hub-title">Ops Saver</div>
+        <div class="tiny">Structured checkpoints, task routing, archive, and parking-lot ideas.</div>
+        <div class="hub-actions">
+          <button class="good" id="goOpsBtn">Open Ops Saver</button>
+        </div>
+      </div>
+      <div class="hub-tile">
+        <div class="hub-title">Brainstorm Chat</div>
+        <div class="tiny">This specific ChatGPT conversation is our immediate-thinking companion. Ideas stay exploratory until you explicitly promote them into active work.</div>
+        <div class="hub-actions">
+          <button class="primary" id="openBrainstormBtn">Open Brainstorm Chat</button>
+        </div>
+        <div id="brainstormStatus" class="link-status">Chat link not set yet.</div>
+      </div>
+    </div>
+    <details style="margin-top:12px">
+      <summary>One-time Brainstorm Chat link setup</summary>
+      <label>Direct URL for this specific ChatGPT conversation</label>
+      <input id="brainstormUrl" type="url" inputmode="url" placeholder="https://chatgpt.com/c/..." autocomplete="off" />
+      <div class="tiny" style="margin-top:7px">
+        Paste the direct URL for this conversation once. It is stored only in this browser and is not included in Ops Saver exports.
+      </div>
+      <div class="buttons">
+        <button class="good" id="saveBrainstormBtn">Save chat link</button>
+        <button class="ghost" id="clearBrainstormBtn">Clear chat link</button>
+      </div>
+    </details>
+  </section>
+
+  <section class="card" id="ops">
+    <div class="route">Least-cost route: <span id="routeText">Chat</span></div>
+    <div id="routeWhy" class="tiny">Use ordinary Chat for concise planning, writing, decisions, and one-step questions.</div>
+    <div class="checks" style="margin-top:10px">
+      <label class="check"><input type="checkbox" id="f_multi"> <span><b>Long multi-step execution</b><br><span class="tiny">Many dependent steps or a finished deliverable.</span></span></label>
+      <label class="check"><input type="checkbox" id="f_browser"> <span><b>Needs browser/computer actions</b><br><span class="tiny">Navigating sites or graphical interfaces.</span></span></label>
+      <label class="check"><input type="checkbox" id="f_code"> <span><b>Code/repository changes</b><br><span class="tiny">Implementation, tests, PRs, deployments.</span></span></label>
+      <label class="check"><input type="checkbox" id="f_connector"> <span><b>One connected-app action</b><br><span class="tiny">Gmail, GitHub, Drive, Calendar, etc.</span></span></label>
+      <label class="check"><input type="checkbox" id="f_local"> <span><b>Can run on our Pi</b><br><span class="tiny">Repeatable/local script or lightweight monitoring.</span></span></label>
+      <label class="check"><input type="checkbox" id="f_current"> <span><b>Needs current web research</b><br><span class="tiny">Fresh public information or verification.</span></span></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="status-grid">
+      <div>
+        <label>Work / agentic availability</label>
+        <select id="workStatus">
+          <option value="available">Available</option>
+          <option value="conserve">Available — conserve it</option>
+          <option value="limited">Near / at limit</option>
+          <option value="unknown">Unknown</option>
+        </select>
+      </div>
+      <div>
+        <label>Reset / credit note</label>
+        <input id="limitNote" placeholder="e.g. resets Friday, 40 credits left" />
+      </div>
+    </div>
+    <div class="tiny" style="margin-top:8px">This is a manual note only; the page does not read your ChatGPT account.</div>
+  </section>
+
+  <section class="card">
+    <div class="row">
+      <div>
+        <label>Project / topic</label>
+        <input id="project" placeholder="StudyHelpAI, Pi 400, house, etc." />
+      </div>
+      <div>
+        <label>Current objective</label>
+        <input id="objective" placeholder="One measurable outcome" />
+      </div>
+    </div>
+
+    <label>Current checkpoint</label>
+    <textarea id="checkpoint" placeholder="What is true right now? Keep this factual."></textarea>
+
+    <label>Settled decisions — do not reopen</label>
+    <textarea id="settled" placeholder="One decision per line"></textarea>
+
+    <label>Next action</label>
+    <textarea id="next" placeholder="The next concrete move"></textarea>
+
+    <div class="row">
+      <div>
+        <label>Blockers / permissions needed</label>
+        <textarea id="blockers" placeholder="Only unresolved blockers"></textarea>
+      </div>
+      <div>
+        <label>Useful links / IDs / references</label>
+        <textarea id="refs" placeholder="Only what the next turn may need"></textarea>
+      </div>
+    </div>
+
+    <label>Parking lot <span class="badge">does not become active work</span></label>
+    <textarea id="parking" placeholder="Ideas to preserve without derailing the active goal"></textarea>
+
+    <div class="buttons">
+      <button class="good" id="saveBtn">Save checkpoint</button>
+      <button class="ghost" id="exportBtn">Export backup</button>
+      <button class="ghost" id="importBtn">Import backup</button>
+      <input type="file" id="importFile" accept="application/json" hidden />
+    </div>
+  </section>
+
+  <section class="card">
+    <label>Prompt style</label>
+    <div class="buttons">
+      <button class="primary" data-mode="continue">Compact continuation</button>
+      <button data-mode="work">Work / Codex brief</button>
+      <button data-mode="quick">Quick chat</button>
+    </div>
+
+    <label>Generated prompt</label>
+    <div id="result" class="result">Fill in the checkpoint above, then generate a prompt.</div>
+    <div class="meter"><div id="meterFill"></div></div>
+    <div id="sizeText" class="tiny" style="margin-top:6px">0 characters</div>
+    <div class="buttons">
+      <button class="primary" id="copyBtn">Copy prompt</button>
+      <button class="warn" id="clearBtn">Clear active fields</button>
+      <button class="ghost" id="selfTestBtn">Run self-test</button>
+    </div>
+    <div id="selfTestResult" class="tiny" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card">
+    <details open>
+      <summary>Saved checkpoints</summary>
+      <div id="archive" class="archive"></div>
+    </details>
+  </section>
+
+  <div class="footer-note">
+    Ops Saver data and the Brainstorm Chat link are stored in this browser. No account credentials or API keys are requested. The chat link is never included in Ops Saver exports.
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const fields = ["workStatus","limitNote","project","objective","checkpoint","settled","next","blockers","refs","parking",
+                "f_multi","f_browser","f_code","f_connector","f_local","f_current"];
+const key = "ops-saver-v1";
+const archiveKey = "ops-saver-archive-v1";
+const companionKey = "ops-saver-companion-v1";
+
+function validChatUrl(raw){
+  try{
+    const u=new URL(raw);
+    const host=u.hostname.toLowerCase();
+    return u.protocol==="https:" && (host==="chatgpt.com" || host.endsWith(".chatgpt.com") || host==="chat.openai.com");
+  }catch(e){ return false; }
+}
+function loadCompanion(){
+  const url=localStorage.getItem(companionKey)||"";
+  $("brainstormUrl").value=url;
+  $("brainstormStatus").textContent=url ? "Connected to this chat on this device." : "Chat link not set yet.";
+}
+$("saveBrainstormBtn").onclick=()=>{
+  const url=$("brainstormUrl").value.trim();
+  if(!validChatUrl(url)){
+    alert("Please paste the direct https://chatgpt.com/... URL for this conversation.");
+    return;
+  }
+  localStorage.setItem(companionKey,url);
+  loadCompanion();
+  $("saveBrainstormBtn").textContent="Saved";
+  setTimeout(()=>$("saveBrainstormBtn").textContent="Save chat link",1200);
+};
+$("clearBrainstormBtn").onclick=()=>{
+  localStorage.removeItem(companionKey);
+  loadCompanion();
+};
+$("openBrainstormBtn").onclick=()=>{
+  const url=localStorage.getItem(companionKey)||"";
+  if(!url){
+    $("brainstormUrl").focus();
+    alert("Paste this conversation's direct ChatGPT URL once, then tap Save chat link.");
+    return;
+  }
+  window.location.href=url;
+};
+$("goOpsBtn").onclick=()=>document.getElementById("ops").scrollIntoView({behavior:"smooth",block:"start"});
+
+
+function value(id){
+  const el=$(id);
+  return el.type==="checkbox" ? el.checked : el.value;
+}
+function setValue(id,v){
+  const el=$(id);
+  if(el.type==="checkbox") el.checked=!!v; else el.value=v??"";
+}
+function saveLocal(){
+  const data={}; fields.forEach(id=>data[id]=value(id));
+  localStorage.setItem(key,JSON.stringify(data));
+}
+function loadLocal(){
+  try{
+    const data=JSON.parse(localStorage.getItem(key)||"{}");
+    fields.forEach(id=>{ if(id in data) setValue(id,data[id]); });
+  }catch(e){}
+  route(); renderArchive();
+}
+fields.forEach(id=>$(id).addEventListener("input",()=>{saveLocal();route();}));
+
+function cleanLines(text){
+  return text.split(/\n+/).map(s=>s.trim()).filter(Boolean);
+}
+function bullets(text){
+  const a=cleanLines(text);
+  return a.length ? a.map(x=>"- "+x).join("\n") : "- None";
+}
+
+function computeRoute(s, multi, browser, code, connector, local, current){
+  let r="Chat", why="Use ordinary Chat for concise planning, writing, decisions, and one-step questions.";
+
+  // Capability comes first: don't route a browser/app/code job to the Pi merely because it is local-capable.
+  if(browser || multi){
+    if(s==="limited"){
+      r="Defer Work or split the task";
+      why="Work is marked limited. Use Chat/plugins/Pi for separable pieces, then spend Work only on the browser/computer step that truly requires it.";
+    } else {
+      r="Work";
+      why="This task benefits from sustained multi-step execution or browser/computer interaction.";
+    }
+  } else if(connector){
+    r="Chat + connected plugin";
+    why="A connected-app action usually does not need a full Work session.";
+  } else if(code){
+    r="Codex / GitHub";
+    why="Repository implementation and tests belong in the code workflow rather than a general browser session.";
+  } else if(local){
+    r="Pi / local runner";
+    why="Use the Pi for repeatable local scripts or monitoring once its runner is online; reserve ChatGPT agentic usage for decisions and exceptions.";
+  } else if(current){
+    r="Chat + web";
+    why="Fresh public information can usually be researched directly without a full Work session.";
+  }
+  return {r, why};
+}
+
+function route(){
+  const x=computeRoute(
+    $("workStatus").value,
+    $("f_multi").checked,
+    $("f_browser").checked,
+    $("f_code").checked,
+    $("f_connector").checked,
+    $("f_local").checked,
+    $("f_current").checked
+  );
+  $("routeText").textContent=x.r;
+  $("routeWhy").textContent=x.why;
+}
+
+function compact(mode){
+  const p=$("project").value.trim(), o=$("objective").value.trim(), c=$("checkpoint").value.trim(),
+        st=$("settled").value.trim(), n=$("next").value.trim(), b=$("blockers").value.trim(),
+        refs=$("refs").value.trim(), park=$("parking").value.trim(), status=$("workStatus").value,
+        note=$("limitNote").value.trim();
+
+  let out="";
+  if(mode==="quick"){
+    out = `${p?`Project: ${p}. `:""}Goal: ${o||"continue the current goal"}. ` +
+          `${c?`Checkpoint: ${c} `:""}` +
+          `${n?`Next: ${n} `:""}` +
+          `Continue from this checkpoint; do not reopen settled work. Use the lightest capable tool and ask only if blocked.`;
+  } else if(mode==="work"){
+    out = `PROJECT\n${p||"Current project"}\n\nOBJECTIVE\n${o||"Continue the current objective"}\n\nCURRENT CHECKPOINT\n${c||"Not specified"}\n\nSETTLED — DO NOT REOPEN\n${bullets(st)}\n\nNEXT ACTION\n${n||"Choose the smallest concrete next move."}\n\nBLOCKERS / PERMISSIONS\n${bullets(b)}\n\nREFERENCES\n${bullets(refs)}\n\nOPERATING RULES\n- Continue from the checkpoint rather than redoing settled work.\n- Use connected plugins directly when one app action is enough.\n- Use Work only when sustained multi-step/browser execution materially helps.\n- Use Codex/GitHub for repository implementation and tests.\n- Use the Pi/local runner for repeatable local jobs when suitable.\n- Ask only when a missing decision, permission, or fact genuinely blocks progress.\n- Keep the response concise unless more detail is needed for execution.`;
+  } else {
+    out = `${p?`Project: ${p}\n`:""}Objective: ${o||"Continue the current objective"}\nCheckpoint: ${c||"Not specified"}\nSettled — do not reopen:\n${bullets(st)}\nNext action: ${n||"Choose the smallest concrete next move."}\nBlockers: ${b||"None"}\nReferences: ${refs||"None"}\nUsage state: Work=${status}${note?`; ${note}`:""}.\nInstruction: Continue from this checkpoint. Use the lightest capable tool; prefer Chat/plugins/Pi for separable work and reserve Work for tasks that truly require sustained browser/computer execution. Ask only if blocked.`;
+  }
+  if(park && mode==="work") out += `\n\nPARKING LOT — PRESERVE, DO NOT ACTIVATE\n${bullets(park)}`;
+  return out.trim();
+}
+
+function show(mode){
+  const out=compact(mode);
+  $("result").textContent=out;
+  const chars=out.length;
+  $("sizeText").textContent=`${chars.toLocaleString()} characters • ~${Math.ceil(chars/4).toLocaleString()} rough tokens`;
+  const pct=Math.min(100,Math.round(chars/35));
+  $("meterFill").style.width=pct+"%";
+  $("meterFill").style.background = chars<1800 ? "var(--good)" : chars<3000 ? "var(--warn)" : "var(--bad)";
+}
+
+document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>show(b.dataset.mode));
+
+$("copyBtn").onclick=async()=>{
+  const t=$("result").textContent;
+  let ok=false;
+  try{
+    await navigator.clipboard.writeText(t);
+    ok=true;
+  }catch(e){
+    try{
+      const ta=document.createElement("textarea");
+      ta.value=t; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0";
+      document.body.appendChild(ta); ta.select();
+      ok=document.execCommand("copy");
+      document.body.removeChild(ta);
+    }catch(_){}
+  }
+  if(ok){
+    $("copyBtn").textContent="Copied";
+    setTimeout(()=>$("copyBtn").textContent="Copy prompt",1200);
+  }else{
+    alert("Copy was blocked by the browser. Select the prompt manually.");
+  }
+};
+
+$("saveBtn").onclick=()=>{
+  const arr=JSON.parse(localStorage.getItem(archiveKey)||"[]");
+  const snap={time:new Date().toISOString(),project:$("project").value,objective:$("objective").value,checkpoint:$("checkpoint").value,
+              settled:$("settled").value,next:$("next").value,blockers:$("blockers").value,refs:$("refs").value,parking:$("parking").value};
+  arr.unshift(snap);
+  localStorage.setItem(archiveKey,JSON.stringify(arr.slice(0,30)));
+  renderArchive();
+  $("saveBtn").textContent="Saved";
+  setTimeout(()=>$("saveBtn").textContent="Save checkpoint",1200);
+};
+
+function renderArchive(){
+  const arr=JSON.parse(localStorage.getItem(archiveKey)||"[]");
+  if(!arr.length){$("archive").innerHTML='<div class="tiny" style="padding-top:10px">No saved checkpoints yet.</div>';return;}
+  $("archive").innerHTML=arr.map((x,i)=>`
+    <div class="item">
+      <div class="item-title">${escapeHtml(x.project||"Checkpoint")} — ${escapeHtml(x.objective||"")}</div>
+      <div class="item-meta">${new Date(x.time).toLocaleString()}</div>
+      <div class="tiny" style="margin-top:5px">${escapeHtml((x.checkpoint||"").slice(0,220))}</div>
+      <div class="buttons"><button onclick="restore(${i})">Restore</button><button class="ghost" onclick="removeSnap(${i})">Delete</button></div>
+    </div>`).join("");
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));}
+window.restore=i=>{
+  const arr=JSON.parse(localStorage.getItem(archiveKey)||"[]"), x=arr[i]; if(!x)return;
+  ["project","objective","checkpoint","settled","next","blockers","refs","parking"].forEach(k=>$(k).value=x[k]||"");
+  saveLocal(); window.scrollTo({top:0,behavior:"smooth"});
+};
+window.removeSnap=i=>{
+  const arr=JSON.parse(localStorage.getItem(archiveKey)||"[]"); arr.splice(i,1);
+  localStorage.setItem(archiveKey,JSON.stringify(arr)); renderArchive();
+};
+
+$("exportBtn").onclick=()=>{
+  const payload={version:1,active:JSON.parse(localStorage.getItem(key)||"{}"),archive:JSON.parse(localStorage.getItem(archiveKey)||"[]")};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="ops-saver-backup.json"; a.click(); URL.revokeObjectURL(a.href);
+};
+$("importBtn").onclick=()=>$("importFile").click();
+$("importFile").onchange=async e=>{
+  const f=e.target.files[0]; if(!f)return;
+  try{
+    const data=JSON.parse(await f.text());
+    if(data.active)localStorage.setItem(key,JSON.stringify(data.active));
+    if(data.archive)localStorage.setItem(archiveKey,JSON.stringify(data.archive));
+    loadLocal();
+  }catch(err){alert("That backup file could not be read.");}
+};
+
+$("clearBtn").onclick=()=>{
+  if(!confirm("Clear the active fields? Saved checkpoints will remain."))return;
+  ["project","objective","checkpoint","settled","next","blockers","refs","parking","limitNote"].forEach(k=>$(k).value="");
+  ["f_multi","f_browser","f_code","f_connector","f_local","f_current"].forEach(k=>$(k).checked=false);
+  $("workStatus").value="available"; saveLocal(); route(); show("continue");
+};
+
+$("selfTestBtn").onclick=()=>{
+  const checks=[];
+  const test=(name, fn)=>{
+    try{ checks.push([name, !!fn()]); }
+    catch(e){ checks.push([name, false]); }
+  };
+
+  test("Default routing", ()=>computeRoute("available",false,false,false,false,false,false).r==="Chat");
+  test("Plugin beats Pi when an app action is required", ()=>computeRoute("available",false,false,false,true,true,false).r==="Chat + connected plugin");
+  test("Browser work beats Pi", ()=>computeRoute("available",false,true,false,false,true,false).r==="Work");
+  test("Limited Work gets conservation route", ()=>computeRoute("limited",true,false,false,false,false,false).r==="Defer Work or split the task");
+
+  const k="ops-saver-self-test";
+  test("Local storage", ()=>{
+    localStorage.setItem(k,"ok");
+    const good=localStorage.getItem(k)==="ok";
+    localStorage.removeItem(k);
+    return good;
+  });
+
+  const saved={
+    project:$("project").value, objective:$("objective").value, checkpoint:$("checkpoint").value,
+    settled:$("settled").value, next:$("next").value, blockers:$("blockers").value,
+    refs:$("refs").value, parking:$("parking").value
+  };
+  try{
+    $("project").value="SELFTEST";
+    $("objective").value="Preserve a compact checkpoint";
+    $("checkpoint").value="Current state";
+    $("settled").value="Do not reopen finished work";
+    $("next").value="Take the next concrete action";
+    const p=compact("continue");
+    test("Prompt generation", ()=>p.includes("SELFTEST") && p.includes("Do not reopen finished work") && p.includes("Take the next concrete action"));
+  } finally {
+    Object.entries(saved).forEach(([id,v])=>$(id).value=v);
+  }
+
+  const passed=checks.filter(x=>x[1]).length;
+  const lines=checks.map(([name,ok])=>(ok?"✓ ":"✗ ")+name).join(" • ");
+  $("selfTestResult").textContent=`${passed}/${checks.length} passed — ${lines}`;
+  $("selfTestResult").style.color = passed===checks.length ? "var(--good)" : "var(--bad)";
+};
+
+loadLocal();
+loadCompanion();
+show("continue");
+
+if("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost")){
+  navigator.serviceWorker.register("service-worker.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
