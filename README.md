@@ -1,18 +1,16 @@
 # Ops Hub
 
-Personal, local-first launcher for:
+Local-first Operations & AI Systems home-screen PWA.
 
-- **Ops Saver** — checkpoints, task routing, saved states, and a parking lot.
-- **Brainstorm Chat** — direct access to Hunter's dedicated exploratory ChatGPT conversation.
+## Release rule
 
-The Brainstorm Chat URL and Ops Saver data are stored only in the browser's local storage. No account credentials or API keys are requested.
+`VERSION`, the visible version badge in `index.html`, and the service-worker cache version must always match. The automated release verifier also protects the StudyHelpAI Live shortcut and Worker Bench from accidental regression.
 
-## Install on Android
+For an Ops Hub change:
+1. Start from the current live `main/index.html` rather than an older standalone copy.
+2. Make the bounded change.
+3. Bump `VERSION`, the visible `vX.Y` badge, and `CACHE="ops-hub-vX.Y"`.
+4. Let `scripts/verify-release.mjs` / GitHub Actions verify consistency.
+5. After deployment, reopen the installed PWA and confirm the new version badge.
 
-After GitHub Pages is enabled for the `main` branch root, open:
-
-`https://hunterregular-a11y.github.io/ops-hub/`
-
-Then use Chrome's **Install app** / **Add to Home screen** option.
-
-On first launch, paste the private direct URL for the Brainstorm Chat once. It is not stored in this repository.
+Keep Ops Hub lean. Add workers or automation only after real repetition justifies them.
