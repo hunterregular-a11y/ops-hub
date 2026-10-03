@@ -79,7 +79,7 @@
       <h1>Ops Saver</h1>
       <div class="sub">Compact checkpoints, route work to the lightest capable tool, and stop paying the context tax twice.</div>
     </div>
-    <div class="pill">Local-first • v1.2</div>
+    <div class="pill">Local-first • v1.3</div>
   </header>
 
   <section class="card" id="hub">
@@ -98,6 +98,14 @@
           <button class="primary" id="openBrainstormBtn">Open Brainstorm Chat</button>
         </div>
         <div id="brainstormStatus" class="link-status">Chat link not set yet.</div>
+      </div>
+      <div class="hub-tile">
+        <div class="hub-title">StudyHelpAI Live</div>
+        <div class="tiny">Private operational view of current visitors, recent pageviews, top pages, referrers, devices, countries, and bot activity.</div>
+        <div class="hub-actions">
+          <button class="good" id="openStudyHelpLiveBtn">Open Live Traffic</button>
+        </div>
+        <div class="link-status">Uses our authenticated PostHog Live view. No analytics read secret is stored in Ops Hub.</div>
       </div>
     </div>
     <details style="margin-top:12px">
@@ -266,6 +274,7 @@ $("openBrainstormBtn").onclick=()=>{
   window.location.href=url;
 };
 $("goOpsBtn").onclick=()=>document.getElementById("ops").scrollIntoView({behavior:"smooth",block:"start"});
+$("openStudyHelpLiveBtn").onclick=()=>{ window.location.href="https://us.posthog.com/project/639010/web/live"; };
 
 
 function value(id){
