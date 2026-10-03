@@ -1,0 +1,38 @@
+{
+  "headers": {
+    "mode": "snake_case"
+  },
+  "normalization": {
+    "trim_whitespace": true,
+    "collapse_internal_whitespace": true,
+    "unicode_nfkc": true,
+    "blank_tokens": ["", "n/a", "na", "null"],
+    "columns": {
+      "email": {
+        "normalizers": ["lowercase"]
+      },
+      "phone": {
+        "normalizers": ["digits_only"]
+      }
+    }
+  },
+  "dedupe": {
+    "enabled": true,
+    "keys": ["email"],
+    "case_sensitive": false
+  },
+  "validation": {
+    "columns": {
+      "name": {
+        "required": true
+      },
+      "email": {
+        "required": true,
+        "type": "email"
+      },
+      "phone": {
+        "regex": "^[0-9]{10,15}$"
+      }
+    }
+  }
+}
