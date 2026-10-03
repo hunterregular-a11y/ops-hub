@@ -165,12 +165,33 @@ def process(headers, rows, source_rows, cfg):
         for column, column_rules in rules.items(): issues += validate(column, row.get(column, ""), column_rules)
         duplicate_of = None
         if dedupe.get("enabled", False):
-            key = tuple(row[k] if dedupe.get("case_sensitive", False) else row[k].casefold() for k in keys)
-            if key in seen:
-                duplicate_of = seen[key]; issues.append(f"duplicate_of_source_row:{duplicate_of}"); duplicates += 1
-            else: seen[key] = source_row
-        validation_issues += sum(not i.startswith("duplicate_of_source_row:") for i in issues)
-        for issue in issues: issues_count[issue.split(":", 1)[0] if issue.startswith("duplicate_of_source_row:") else issue] += 1
+            unsafe_keys = []
+            for key_column in keys:
+                key_value = row[key_column]
+                key_rules = rules.get(key_column, {})
+                if not key_value:
+                    unsafe_keys.append((key_column, "blank"))
+                elif validate(key_column, key_value, key_rules):
+                    unsafe_keys.append((key_column, "invalid"))
+            if unsafe_keys:
+                for key_column, reason in unsafe_keys:
+                    issues.append(f"dedupe_skipped_{reason}_key:{key_column}")
+            else:
+                key = tuple(row[k] if dedupe.get("case_sensitive", False) else row[k].casefold() for k in keys)
+                if key in seen:
+                    duplicate_of = seen[key]; issues.append(f"duplicate_of_source_row:{duplicate_of}"); duplicates += 1
+                else: seen[key] = source_row
+        validation_issues += sum(
+            not i.startswith(("duplicate_of_source_row:", "dedupe_skipped_")) for i in issues
+        )
+        for issue in issues:
+            if issue.startswith("duplicate_of_source_row:"):
+                issue_key = "duplicate_of_source_row"
+            elif issue.startswith("dedupe_skipped_"):
+                issue_key = issue.split(":", 1)[0]
+            else:
+                issue_key = issue
+            issues_count[issue_key] += 1
         if issues:
             exception = {"_source_row": str(source_row), "_issues": ";".join(issues), "_changes": ";".join(row_changes), **row}
             exceptions.append(exception)
