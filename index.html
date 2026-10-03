@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="icon" href="icon-192.png" type="image/png" />
-<title>Ops Hub — Ops Saver + Brainstorm</title>
+<title>Ops Hub — Ops Saver + Worker Bench + Brainstorm</title>
 <style>
   :root{
     --bg:#0d0f14; --panel:#171a22; --panel2:#11141b; --text:#f5f7fb; --muted:#aeb6c6;
@@ -70,6 +70,15 @@
   .hub-title{font-weight:800;font-size:17px;margin-bottom:5px}
   .hub-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
   .link-status{margin-top:7px;font-size:12px;color:var(--muted);word-break:break-word}
+
+  .worker-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:700px){.worker-grid{grid-template-columns:1fr}}
+  .worker-list{margin-top:12px}
+  .worker-item{border-top:1px solid var(--line);padding:11px 0}
+  .worker-item:first-child{border-top:0}
+  .worker-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+  .worker-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+  .worker-chip{font-size:11px;padding:3px 7px;border-radius:999px;background:#262c3d;color:#cbd4e8}
 </style>
 </head>
 <body>
@@ -79,7 +88,7 @@
       <h1>Ops Saver</h1>
       <div class="sub">Compact checkpoints, route work to the lightest capable tool, and stop paying the context tax twice.</div>
     </div>
-    <div class="pill">Local-first • v1.3</div>
+    <div class="pill">Local-first • v1.4</div>
   </header>
 
   <section class="card" id="hub">
@@ -224,8 +233,74 @@
     </details>
   </section>
 
+
+
+  <section class="card" id="workerBench">
+    <details>
+      <summary>Worker Bench registry <span class="badge">reuse before rebuilding</span></summary>
+      <div class="tiny" style="margin-top:8px">Record only reusable workers, scripts, automations, and narrow agents. This is an inventory and recovery map, not a new execution platform.</div>
+
+      <div class="worker-grid">
+        <div>
+          <label>Worker name</label>
+          <input id="workerName" placeholder="e.g. Search Console impression watch" />
+        </div>
+        <div>
+          <label>Execution layer</label>
+          <select id="workerLayer">
+            <option>Script</option>
+            <option>Automation</option>
+            <option>Narrow agent</option>
+            <option>Pi / local runner</option>
+            <option>Plugin</option>
+            <option>Chat / main assistant</option>
+          </select>
+        </div>
+      </div>
+
+      <label>What it does</label>
+      <textarea id="workerPurpose" placeholder="One narrow reusable job."></textarea>
+
+      <div class="worker-grid">
+        <div>
+          <label>Trigger</label>
+          <textarea id="workerTrigger" placeholder="Manual, scheduled, event/condition, or invoked by another worker."></textarea>
+        </div>
+        <div>
+          <label>Inputs → output</label>
+          <textarea id="workerIO" placeholder="Required inputs and the verified result it produces."></textarea>
+        </div>
+      </div>
+
+      <div class="worker-grid">
+        <div>
+          <label>Permissions / risk</label>
+          <textarea id="workerRisk" placeholder="Read-only, approval required, destructive boundary, external action, etc."></textarea>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="workerStatus">
+            <option value="active">Active / reusable</option>
+            <option value="candidate">Candidate — not built</option>
+            <option value="paused">Paused</option>
+            <option value="retired">Retired</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Recovery / checkpoint</label>
+      <textarea id="workerRecovery" placeholder="Where it lives, how to resume it, test command, procedure, or reference needed to recover it."></textarea>
+
+      <div class="buttons">
+        <button class="good" id="saveWorkerBtn">Save worker</button>
+        <button class="ghost" id="clearWorkerBtn">Clear form</button>
+      </div>
+      <div id="workerList" class="worker-list"></div>
+    </details>
+  </section>
+
   <div class="footer-note">
-    Ops Saver data and the Brainstorm Chat link are stored in this browser. No account credentials or API keys are requested. The chat link is never included in Ops Saver exports.
+    Ops Saver, Worker Bench registry, and the Brainstorm Chat link are stored in this browser. No account credentials or API keys are requested. The chat link is never included in Ops Saver exports.
   </div>
 </div>
 
@@ -236,6 +311,51 @@ const fields = ["workStatus","limitNote","project","objective","checkpoint","set
 const key = "ops-saver-v1";
 const archiveKey = "ops-saver-archive-v1";
 const companionKey = "ops-saver-companion-v1";
+const workerKey = "ops-saver-workers-v1";
+const workerSeedKey = "ops-saver-workers-seed-v1";
+const provenWorkerSeeds = [
+  {
+    name:"Ops Saver checkpoint generator", layer:"Script", status:"active",
+    purpose:"Turns the current project checkpoint into a compact continuation, Work/Codex, or quick-chat handoff prompt without reopening settled work.",
+    trigger:"Manual — when pausing, resuming, or handing off a project/task.",
+    io:"Project/objective/checkpoint/settled decisions/next action/blockers/references/parking → compact continuation prompt.",
+    risk:"Local and read-only to work content. No credentials or external actions; saved checkpoints remain user-controlled.",
+    recovery:"Ops Hub HTML → checkpoint fields → prompt style. Built-in self-test verifies prompt generation."
+  },
+  {
+    name:"Ops Saver least-cost task router", layer:"Script", status:"active",
+    purpose:"Routes work to the lightest capable execution layer based on task needs and Work availability.",
+    trigger:"Automatic while routing checkboxes or Work availability change.",
+    io:"Task capability flags + Work availability → Chat, Work, connected plugin, Codex/GitHub, Pi/local runner, or Chat + web route.",
+    risk:"Advisory only; it does not execute actions. Pi/local routing assumes the local runner is actually ready.",
+    recovery:"Ops Hub HTML → least-cost route section. Built-in self-test verifies default, plugin, browser, and limited-Work routing."
+  },
+  {
+    name:"Ops Saver backup / restore", layer:"Script", status:"active",
+    purpose:"Exports and restores active checkpoint state, saved checkpoints, and Worker Bench registry as a local JSON backup.",
+    trigger:"Manual — before meaningful changes or when moving/recovering Ops Hub state.",
+    io:"Browser localStorage state → ops-saver-backup.json; imported backup → restored local Ops Hub state.",
+    risk:"Local file read/write only. Restore changes Ops Hub local state; no external system changes.",
+    recovery:"Ops Hub HTML → Export backup / Import backup. v1.3 remains the rollback source for the prior application version."
+  },
+  {
+    name:"XMemo resumable checkpoint handoff", layer:"Plugin", status:"active",
+    purpose:"Persists the current Operations & AI Systems task, next action, and blocker so work can resume without reconstructing context.",
+    trigger:"At meaningful handoff/checkpoint changes — not for every transient chat turn.",
+    io:"Current task + next action + blocker → versioned durable working-state slot; context recall → bounded restart context.",
+    risk:"Writes durable work context. Do not store secrets or unnecessary private data; edits/deletions remain deliberate actions.",
+    recovery:"XMemo scope operations-ai-systems; state key ops_ai_systems_active_task; durable architecture stored under Projects / Operations-ai-systems. Verified save + recall on 2026-10-03."
+  }
+];
+
+function ensureProvenWorkerSeeds(){
+  if(localStorage.getItem(workerSeedKey)==="done") return;
+  const arr=loadWorkers();
+  const names=new Set(arr.map(x=>(x.name||"").trim().toLowerCase()));
+  const missing=provenWorkerSeeds.filter(x=>!names.has(x.name.toLowerCase())).map(x=>({...x,time:new Date().toISOString(),seeded:true}));
+  if(missing.length) saveWorkers([...missing,...arr].slice(0,50));
+  localStorage.setItem(workerSeedKey,"done");
+}
 
 function validChatUrl(raw){
   try{
@@ -437,8 +557,69 @@ window.removeSnap=i=>{
   localStorage.setItem(archiveKey,JSON.stringify(arr)); renderArchive();
 };
 
+
+
+function workerFormData(){
+  return {
+    name:$("workerName").value.trim(),
+    layer:$("workerLayer").value,
+    purpose:$("workerPurpose").value.trim(),
+    trigger:$("workerTrigger").value.trim(),
+    io:$("workerIO").value.trim(),
+    risk:$("workerRisk").value.trim(),
+    status:$("workerStatus").value,
+    recovery:$("workerRecovery").value.trim()
+  };
+}
+function clearWorkerForm(){
+  ["workerName","workerPurpose","workerTrigger","workerIO","workerRisk","workerRecovery"].forEach(id=>$(id).value="");
+  $("workerLayer").value="Script";
+  $("workerStatus").value="active";
+}
+function loadWorkers(){
+  try{return JSON.parse(localStorage.getItem(workerKey)||"[]");}catch(e){return [];}
+}
+function saveWorkers(arr){localStorage.setItem(workerKey,JSON.stringify(arr));}
+function renderWorkers(){
+  const arr=loadWorkers();
+  if(!arr.length){
+    $("workerList").innerHTML='<div class="tiny" style="padding-top:10px">No reusable workers recorded yet. Add one only after it exists or is a concrete candidate.</div>';
+    return;
+  }
+  $("workerList").innerHTML=arr.map((x,i)=>`
+    <div class="worker-item">
+      <div class="worker-head">
+        <div>
+          <div class="item-title">${escapeHtml(x.name||"Unnamed worker")}</div>
+          <div class="worker-meta"><span class="worker-chip">${escapeHtml(x.layer||"")}</span><span class="worker-chip">${escapeHtml(x.status||"")}</span></div>
+        </div>
+        <button class="ghost" onclick="removeWorker(${i})">Delete</button>
+      </div>
+      <div class="tiny" style="margin-top:7px"><b>Job:</b> ${escapeHtml(x.purpose||"—")}</div>
+      <div class="tiny" style="margin-top:4px"><b>Trigger:</b> ${escapeHtml(x.trigger||"—")}</div>
+      <div class="tiny" style="margin-top:4px"><b>I/O:</b> ${escapeHtml(x.io||"—")}</div>
+      <div class="tiny" style="margin-top:4px"><b>Risk:</b> ${escapeHtml(x.risk||"—")}</div>
+      <div class="tiny" style="margin-top:4px"><b>Recovery:</b> ${escapeHtml(x.recovery||"—")}</div>
+    </div>`).join("");
+}
+$("saveWorkerBtn").onclick=()=>{
+  const x=workerFormData();
+  if(!x.name || !x.purpose){alert("Give the worker a name and one narrow job before saving it.");return;}
+  const arr=loadWorkers();
+  arr.unshift({...x,time:new Date().toISOString()});
+  saveWorkers(arr.slice(0,50));
+  renderWorkers();
+  clearWorkerForm();
+  $("saveWorkerBtn").textContent="Saved";
+  setTimeout(()=>$("saveWorkerBtn").textContent="Save worker",1200);
+};
+$("clearWorkerBtn").onclick=clearWorkerForm;
+window.removeWorker=i=>{
+  const arr=loadWorkers(); arr.splice(i,1); saveWorkers(arr); renderWorkers();
+};
+
 $("exportBtn").onclick=()=>{
-  const payload={version:1,active:JSON.parse(localStorage.getItem(key)||"{}"),archive:JSON.parse(localStorage.getItem(archiveKey)||"[]")};
+  const payload={version:2,active:JSON.parse(localStorage.getItem(key)||"{}"),archive:JSON.parse(localStorage.getItem(archiveKey)||"[]"),workers:loadWorkers()};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="ops-saver-backup.json"; a.click(); URL.revokeObjectURL(a.href);
 };
@@ -449,7 +630,8 @@ $("importFile").onchange=async e=>{
     const data=JSON.parse(await f.text());
     if(data.active)localStorage.setItem(key,JSON.stringify(data.active));
     if(data.archive)localStorage.setItem(archiveKey,JSON.stringify(data.archive));
-    loadLocal();
+    if(data.workers)saveWorkers(data.workers);
+    loadLocal(); renderWorkers();
   }catch(err){alert("That backup file could not be read.");}
 };
 
@@ -493,6 +675,7 @@ $("selfTestBtn").onclick=()=>{
     $("next").value="Take the next concrete action";
     const p=compact("continue");
     test("Prompt generation", ()=>p.includes("SELFTEST") && p.includes("Do not reopen finished work") && p.includes("Take the next concrete action"));
+    test("Worker registry storage", ()=>Array.isArray(loadWorkers()));
   } finally {
     Object.entries(saved).forEach(([id,v])=>$(id).value=v);
   }
@@ -505,6 +688,8 @@ $("selfTestBtn").onclick=()=>{
 
 loadLocal();
 loadCompanion();
+ensureProvenWorkerSeeds();
+renderWorkers();
 show("continue");
 
 if("serviceWorker" in navigator && (location.protocol==="https:" || location.hostname==="localhost")){
