@@ -6,7 +6,7 @@ A deliberately narrow deterministic worker for repeatable tabular cleanup. It is
 
 - Reads `.csv` and `.xlsx` files without modifying the source.
 - Applies explicit normalization rules only: Unicode NFKC, whitespace handling, configured blank tokens, lower/upper casing, and digits-only fields.
-- Performs exact or exact-key deduplication. No fuzzy matching.
+- Performs exact or exact-key deduplication. No fuzzy matching. Blank or validation-invalid dedupe keys are never auto-removed.
 - Validates required, email, and regex rules.
 - Keeps the first exact duplicate and copies removed duplicates into the exceptions file with the original source-row reference.
 - Keeps validation-failing nonduplicate rows in the cleaned output while also copying them into exceptions for review. This prevents silent data loss.
