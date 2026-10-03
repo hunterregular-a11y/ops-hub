@@ -1,0 +1,7 @@
+Name,Email,Phone,Status
+ Alice Smith , ALICE@EXAMPLE.COM ,(709) 555-0100, active 
+Alice Smith,alice@example.com,7095550100,active
+Bob  Jones,bob@example.com,709 555 0101,active
+Bad Email,not-an-email,7095550102,active
+,missing@example.com,7095550103,active
+Null Phone,nullphone@example.com,N/A,inactive

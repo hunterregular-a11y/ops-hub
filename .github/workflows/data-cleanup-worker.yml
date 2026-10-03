@@ -1,0 +1,28 @@
+name: Data cleanup worker
+
+on:
+  pull_request:
+    paths:
+      - "workers/data-cleanup/**"
+      - ".github/workflows/data-cleanup-worker.yml"
+  push:
+    branches: [main]
+    paths:
+      - "workers/data-cleanup/**"
+      - ".github/workflows/data-cleanup-worker.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install XLSX dependency
+        run: python -m pip install -r workers/data-cleanup/requirements.txt
+      - name: Run worker tests
+        run: python -m unittest discover -s workers/data-cleanup/tests -p "test_*.py" -v

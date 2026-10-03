@@ -1,0 +1,19 @@
+# Never version real input datasets placed here.
+inputs/
+
+# Default/local run outputs.
+cleanup-output/
+output/
+out/
+*-out/
+
+# Generated worker artifacts.
+*.cleaned.csv
+*.cleaned.xlsx
+*.exceptions.csv
+*.report.json
+*.report.md
+
+# Local caches.
+__pycache__/
+*.pyc
