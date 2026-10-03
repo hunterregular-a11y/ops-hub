@@ -1,14 +1,24 @@
 {
   "name": "Ops Hub",
   "short_name": "Ops Hub",
-  "description": "Ops Saver plus direct access to the dedicated brainstorming ChatGPT conversation.",
+  "description": "Ops Saver, Worker Bench, and direct operational shortcuts for the Operations & AI Systems workspace.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0d0f14",
   "theme_color": "#0d0f14",
   "icons": [
-    {"src":"icon-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
-    {"src":"icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }
