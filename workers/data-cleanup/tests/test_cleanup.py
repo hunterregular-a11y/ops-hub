@@ -125,6 +125,27 @@ class CleanupTests(unittest.TestCase):
         self.assertEqual(report["metrics"]["cleaned_rows"], 2)
         self.assertEqual(report["metrics"]["duplicate_rows_removed"], 0)
 
+    def test_invalid_or_blank_dedupe_keys_are_never_auto_removed(self):
+        source = self.root / "unsafe-keys.csv"
+        source.write_text(
+            "Name,Email,Phone\n"
+            "First,not-an-email,7095550100\n"
+            "Second,not-an-email,7095550101\n"
+            "Blank One,,7095550102\n"
+            "Blank Two,,7095550103\n",
+            encoding="utf-8",
+        )
+        outputs = run(source, self.config, self.root / "unsafe-out")
+        report = json.loads(outputs["report_json"].read_text(encoding="utf-8"))
+        self.assertEqual(report["metrics"]["source_rows"], 4)
+        self.assertEqual(report["metrics"]["cleaned_rows"], 4)
+        self.assertEqual(report["metrics"]["duplicate_rows_removed"], 0)
+        with outputs["exceptions"].open(encoding="utf-8", newline="") as handle:
+            exceptions = list(csv.DictReader(handle))
+        self.assertEqual(len(exceptions), 4)
+        self.assertTrue(any("dedupe_skipped_invalid_key:email" in r["_issues"] for r in exceptions))
+        self.assertTrue(any("dedupe_skipped_blank_key:email" in r["_issues"] for r in exceptions))
+
     def test_unknown_config_column_fails_closed(self):
         source = HERE / "fixtures" / "contacts.csv"
         cfg = json.loads(json.dumps(CONFIG))
