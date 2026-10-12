@@ -1,0 +1,50 @@
+{
+  "passed": 11,
+  "total": 11,
+  "results": [
+    {
+      "name": "Existing PWA updates from v1.4 to v1.5 at the same start URL",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration copies existing records and leaves original storage keys byte-identical",
+      "status": "PASS"
+    },
+    {
+      "name": "Migration is not repeated on subsequent opens",
+      "status": "PASS"
+    },
+    {
+      "name": "Existing Guard projects take precedence over older Ops Saver data",
+      "status": "PASS"
+    },
+    {
+      "name": "Malformed old data is preserved and migration does not silently erase it",
+      "status": "PASS"
+    },
+    {
+      "name": "Worker Bench and the protected live-traffic shortcut are reachable",
+      "status": "PASS"
+    },
+    {
+      "name": "PWA manifest retains the existing installation identity",
+      "status": "PASS"
+    },
+    {
+      "name": "Offline relaunch opens the new home and its saved project",
+      "status": "PASS"
+    },
+    {
+      "name": "Original tools remain available offline",
+      "status": "PASS"
+    },
+    {
+      "name": "Service-worker activation keeps unrelated origin caches",
+      "status": "PASS"
+    },
+    {
+      "name": "Update check reports the installed version without discarding an immediate edit",
+      "status": "PASS"
+    }
+  ]
+}
